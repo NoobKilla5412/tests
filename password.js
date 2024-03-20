@@ -8,13 +8,16 @@ const Seqstring = require("seqstring");
   const letters = Array.from(Array(126 - 32 + 1), (_, i) => String.fromCharCode(i + 32)).filter((v) => v != ";");
   log(letters);
 
-  function done(pass) {
-    writeFileSync("done.csv", (readFileSync("done.csv") || "") + pass + "\n");
+  let done = (readFileSync("done.log").toString() || "").split("\n");
+
+  function passDone(pass) {
+    writeFileSync("done.log", (readFileSync("done.log").toString() || "") + pass + "\n");
   }
 
   const generator = new Seqstring(1, 20, letters);
 
   for (const pass of generator) {
+    if (done.includes(pass)) continue;
     const text = await (
       await fetch("https://pawn.pieces.tafca.co.uk", {
         headers: {
@@ -32,6 +35,6 @@ const Seqstring = require("seqstring");
       console.log(pass);
       break;
     }
-    done(pass);
+    passDone(pass);
   }
 })();
