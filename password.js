@@ -16,8 +16,8 @@ const { log } = require("console");
     return pass;
   }
 
-  for (let i = 5; i < 100; i++) {
-    for (let j = 0; j < 65 * (i + 1); j++) {
+  main: for (let i = 0; i < 100; i++) {
+    for (let j = 0; j < 65 * (i + 3); j++) {
       let pass = generatePass(i);
       const text = await (
         await fetch("https://pawn.pieces.tafca.co.uk", {
@@ -34,7 +34,7 @@ const { log } = require("console");
 </script>`
       ) {
         console.log(pass);
-        break;
+        break main;
       }
     }
     log(i + 1);
