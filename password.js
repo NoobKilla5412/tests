@@ -4,7 +4,7 @@ const Seqstring = require("seqstring");
 (async () => {
   const { default: fetch } = await import("node-fetch");
 
-  const letters = Array.from(Array(126 - 32 + 1), (_, i) => String.fromCharCode(i + 32));
+  const letters = Array.from(Array(126 - 32 + 1), (_, i) => String.fromCharCode(i + 32)).filter((v) => v != ";");
   log(letters);
 
   const generator = new Seqstring(1, 20, letters);
