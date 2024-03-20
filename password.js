@@ -1,4 +1,5 @@
 const { log } = require("console");
+const { writeFileSync, readFileSync } = require("fs");
 const Seqstring = require("seqstring");
 
 (async () => {
@@ -6,6 +7,10 @@ const Seqstring = require("seqstring");
 
   const letters = Array.from(Array(126 - 32 + 1), (_, i) => String.fromCharCode(i + 32)).filter((v) => v != ";");
   log(letters);
+
+  function done(pass) {
+    writeFileSync("done.csv", (readFileSync("done.csv") || "") + pass + "\n");
+  }
 
   const generator = new Seqstring(1, 20, letters);
 
@@ -27,5 +32,6 @@ const Seqstring = require("seqstring");
       console.log(pass);
       break;
     }
+    done(pass);
   }
 })();
