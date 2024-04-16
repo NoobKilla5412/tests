@@ -1,6 +1,7 @@
-const { log } = require("console");
-const { writeFileSync, readFileSync } = require("fs");
-const Seqstring = require("seqstring");
+import { log } from "console";
+import { readFileSync, writeFileSync } from "fs";
+// @ts-ignore
+import Seqstring from "seqstring";
 
 (async () => {
   const { default: fetch } = await import("node-fetch");
@@ -10,7 +11,7 @@ const Seqstring = require("seqstring");
 
   let done = (readFileSync("done.log").toString() || "").split("\n");
 
-  function passDone(pass) {
+  function passDone(pass: string) {
     writeFileSync("done.log", (readFileSync("done.log").toString() || "") + pass + "\n");
   }
 
