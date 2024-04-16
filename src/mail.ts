@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
 
 let transporter = nodemailer.createTransport({
   service: "gmail",
@@ -8,7 +8,7 @@ let transporter = nodemailer.createTransport({
   }
 });
 
-async function sleep(ms) {
+async function sleep(ms?: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -22,7 +22,7 @@ async function main() {
       subject: "Email",
       text: (i++).toString()
     };
-    transporter.sendMail(mailOptions, function (error, info) {
+    transporter.sendMail(mailOptions, function (error: any, info: { response: string; }) {
       if (error) {
         console.log(error);
       } else {

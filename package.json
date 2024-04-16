@@ -10,6 +10,7 @@
   "author": "Noob Killa Studios",
   "license": "ISC",
   "devDependencies": {
+    "@types/nodemailer": "^6.4.14",
     "@webpack-cli/generators": "^3.0.4",
     "html-webpack-plugin": "^5.5.1",
     "style-loader": "^3.3.2",
