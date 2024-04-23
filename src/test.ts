@@ -1,4 +1,4 @@
-import { sleep, useUtils } from "./utils";
+import { onCondition, sleep, useUtils } from "./utils";
 
 useUtils();
 
@@ -15,10 +15,43 @@ function calculateProgressBar(percent: number, cap = 100) {
   return res;
 }
 
+async function run() {
+  let inc = 150;
+
+  let winner: number | null = null;
+
+  return new Promise<number | null>(async (resolve) => {
+    setImmediate(async () => {
+      const res = document.body.appendChild(document.createElement("div"));
+      for (let i = 0; i <= inc && winner == null; i += Math.randomRange(0.1, 1)) {
+        res.innerHTML = `${calculateProgressBar(i / inc, inc)}`;
+        await sleep(10);
+      }
+      res.innerHTML = "";
+      winner ??= 1;
+    });
+    setImmediate(async () => {
+      const res = document.body.appendChild(document.createElement("div"));
+      for (let i = 0; i <= inc && winner == null; i += Math.randomRange(0.1, 1)) {
+        res.innerHTML = `${calculateProgressBar(i / inc, inc)}`;
+        await sleep(10);
+      }
+      res.innerHTML = "";
+      winner ??= 2;
+    });
+    await onCondition(
+      () => winner != null,
+      () => {
+        resolve(winner || null);
+      }
+    );
+  });
+}
+
 export async function test() {
-  const res = document.body.appendChild(document.createElement("div"));
-  for (let i = 0; i <= 100; i++) {
-    res.innerHTML = `${calculateProgressBar(i / 100)} - ${i}%`;
-    await sleep(100);
+  let runs: (number | null)[] = [];
+  for (let i = 0; i < 10; i++) {
+    runs.push(await run());
   }
+  console.log(runs);
 }
