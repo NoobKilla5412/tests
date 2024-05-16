@@ -1,10 +1,11 @@
 import nodemailer from "nodemailer";
+import { getMaxLen } from "./maxLen";
 
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "frogcat5412@gmail.com",
-    pass: "rrqc ssdo hpkh nnxt"
+    user: "brandon.robertson@student.csd509j.net",
+    pass: "fkjg tveo axow qzki"
   }
 });
 
@@ -12,25 +13,21 @@ async function sleep(ms?: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let i = 0;
-
-async function main() {
+export async function mailBot() {
   while (true) {
     let mailOptions = {
       from: "youremail@gmail.com",
       to: "alexander.eveland-dewan@student.csd509j.net,ojas.bhat@student.csd509j.net",
       subject: "Email",
-      text: (i++).toString()
+      text: getMaxLen()
     };
-    transporter.sendMail(mailOptions, function (error: any, info: { response: string; }) {
+    transporter.sendMail(mailOptions, function (error: any, info: { response: string }) {
       if (error) {
         console.log(error);
       } else {
         console.log("Email sent: " + info.response);
       }
     });
-    await sleep(1000 / 1);
+    await sleep(1000 / 10);
   }
 }
-
-main();
