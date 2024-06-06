@@ -10,6 +10,7 @@
   "author": "Noob Killa Studios",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.14.2",
     "@types/nodemailer": "^6.4.14",
     "@types/prompt-sync": "^4.2.3",
     "@webpack-cli/generators": "^3.0.4",

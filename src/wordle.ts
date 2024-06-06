@@ -1,43 +1,53 @@
+import { log } from "console";
 import { readFileSync } from "fs";
-import prompt_ from "prompt-sync";
 
-const prompt = prompt_();
+export class Wordle {
+  word: string;
+  amountOfLetters: Map<string, number> = new Map();
 
-export async function wordle() {
-  let words = readFileSync("dictionary1.csv")
-    .toString()
-    .split(/\n/)
-    .map((v) => v.toUpperCase());
-  let withoutLetters = "";
-  let withLetters = Array.from(new Array(5), () => "");
-  let key = "";
-  let guess = "ADIEU";
-  let i = 0;
-  while (i < 6) {
-    console.log(`  ${guess} - ${words.length}`);
-    key = "";
-    if (words.length <= 0) return;
-    const input = prompt({ ask: "> " })?.toUpperCase();
-    if (input == null) return;
-    for (let i = 0; i < input.length; i++) {
-      const char = input[i];
-      if (char == "+") {
-        withLetters[i] += guess[i];
-        key += `[^${withLetters[i]}]`;
-      } else if (char == guess[i]) {
-        key += char;
-      } else if (char == "*") {
-        withoutLetters += guess[i];
-        key += `[^${withLetters[i]}]`;
+  public constructor() {
+    let words = readFileSync("Dictionary-github.csv").toString().split(/\n/);
+    this.word = words[~~(Math.random() * words.length)].toUpperCase();
+    this.word = "TUNAS";
+    log(this.word);
+    for (let i = 0; i < this.word.length; i++) {
+      let current = this.amountOfLetters.get(this.word.charAt(i));
+      if (current == null) {
+        current = 0;
+      }
+      this.amountOfLetters.set(this.word.charAt(i), current + 1);
+    }
+  }
+
+  public isSolved(s: string) {
+    return s == this.word;
+  }
+
+  public enterAction(s: string) {
+    let usedLetters: Map<string, number> = new Map();
+    for (const [letter, amount] of this.amountOfLetters) {
+      usedLetters.set(letter, amount);
+    }
+
+    let res: string[] = new Array(5);
+    for (let i = 0; i < s.length; i++) {
+      let ch = s.charAt(i);
+      if (this.word.charAt(i) == ch) {
+        res[i] = "-";
+        usedLetters.set(ch, (usedLetters.get(ch) || 0) - 1);
       }
     }
-    words = words.filter(
-      (v) =>
-        new RegExp(`^${key}$`, "i").test(v) &&
-        new RegExp(`^[^${withoutLetters}]+$`, "i").test(v) &&
-        new RegExp(`${withLetters.join("").length == 0 ? ".*" : `[${withLetters.join("")}]`}`, "i").test(v)
-    );
-    guess = words[/* ~~(Math.random() * words.length) */ 0];
-    i++;
+    for (let i = 0; i < s.length; i++) {
+      let ch = s.charAt(i);
+      if (this.word.includes(ch) && res[i] != "-") {
+        if ((usedLetters.get(ch) || 0) > 0) {
+          res[i] = "+";
+          usedLetters.set(ch, (usedLetters.get(ch) || 0) - 1);
+        } else res[i] = "*";
+      } else if (!this.word.includes(ch)) {
+        res[i] = "*";
+      }
+    }
+    return res.join("");
   }
 }
