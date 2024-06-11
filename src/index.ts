@@ -43,8 +43,8 @@ function displayStats(stats: Stats) {
   }
 }
 
-const display = false;
-const run = false;
+const display = true;
+const run = true;
 
 (async () => {
   let stats = readStats();
