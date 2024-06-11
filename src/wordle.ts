@@ -8,8 +8,6 @@ export class Wordle {
   public constructor() {
     let words = readFileSync("Dictionary-github.csv").toString().split(/\n/);
     this.word = words[~~(Math.random() * words.length)].toUpperCase();
-    this.word = "TUNAS";
-    log(this.word);
     for (let i = 0; i < this.word.length; i++) {
       let current = this.amountOfLetters.get(this.word.charAt(i));
       if (current == null) {
