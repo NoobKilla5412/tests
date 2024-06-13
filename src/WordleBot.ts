@@ -3,7 +3,9 @@ import { readFileSync } from "fs";
 import prompt_ from "prompt-sync";
 import { roundTo } from "./MathUtils";
 
-const prompt = prompt_();
+const prompt = prompt_({
+  sigint: true
+});
 
 function wordContainsAllLetters(word: string, letters: string[]) {
   for (const letter of letters) {
@@ -19,12 +21,6 @@ function wordContainsOneLetter(word: string, letters: string[]) {
     if (word.indexOf(letter) != word.lastIndexOf(letter)) return false;
   }
   return true;
-}
-
-export enum Mode {
-  Replit,
-  Github,
-  Both
 }
 
 async function waitFor(x: () => Promise<boolean> | boolean) {
@@ -54,12 +50,23 @@ const defaultOptions: Options = {
   useAsync: true
 };
 
+export enum Mode {
+  Replit = 0b1,
+  Github = 0b10,
+  Times = 0b100,
+  Words = 0b1000,
+  All = 0b1111
+}
+
+function checkBin(a: number, b: number) {
+  return (a & b) > 0;
+}
+
 export class WordleBot {
   private mode: Mode;
-  public words!: string[];
+  private static words: string[];
+  private words!: string[];
   private options: Options;
-
-  public guess = "ADIEU";
 
   public constructor(mode: Mode, options: Partial<Options> = defaultOptions) {
     this.mode = mode;
@@ -72,19 +79,27 @@ export class WordleBot {
         return v.length == 5 && /^[a-zA-Z]+$/i.test(v);
       });
     const replitList = readFileSync("Dictionary-replit.csv").toString().split(/\n/);
+    const timesList = readFileSync("Dictionary-wordle-guess.csv").toString().split(/\n/);
     const githubList = readFileSync("Dictionary-github.csv").toString().split(/\n/);
-    switch (this.mode) {
-      case Mode.Replit:
-        this.words = replitList;
-        break;
-      case Mode.Github:
-        this.words = githubList;
-        break;
-      case Mode.Both:
-        this.words = replitList.concat(githubList);
-        break;
+    let words: string[] = [];
+    if (checkBin(mode, Mode.Words)) {
+      log("Words");
+      words = words.concat(wordsList);
     }
-    this.words = Array.from(new Set(wordsList.concat(this.words.map((v) => v.toUpperCase()))));
+    if (checkBin(mode, Mode.Replit)) {
+      log("Replit");
+      words = words.concat(replitList);
+    }
+    if (checkBin(mode, Mode.Github)) {
+      log("Github");
+      words = words.concat(githubList);
+    }
+    if (checkBin(mode, Mode.Times)) {
+      log("Times");
+      words = words.concat(timesList);
+    }
+    WordleBot.words = Array.from(new Set(words)).map((v) => v.toUpperCase().trim());
+    log(WordleBot.words.length);
     this.reset();
   }
 
@@ -112,22 +127,33 @@ export class WordleBot {
   //       });
   //   });
   // }
+  public guess!: string;
+  public lastWordList = this.words;
+
   private guessed: string[] = [];
   private withoutLetters = "";
   private singleLetters = "";
+  private greenLettersArray: string[] = [];
   private withLetters = Array.from(new Array(5), () => "");
   private withLettersSet = new Set<string>();
   private key = "";
   private i = 0;
+  private usedAltStrategyNum = 0;
 
   public reset() {
+    this.words = Array.from(WordleBot.words);
+    this.lastWordList = this.words;
+
+    this.guess = "CRANE";
     this.guessed = [];
     this.withoutLetters = "";
     this.singleLetters = "";
+    this.greenLettersArray = [];
     this.withLetters = Array.from(new Array(5), () => "");
     this.withLettersSet = new Set<string>();
     this.key = "";
     this.i = 0;
+    this.usedAltStrategyNum = 0;
   }
 
   public async getGuess(getInput: () => Promise<string> | string) {
@@ -139,6 +165,11 @@ export class WordleBot {
       this.guess = this.words[0];
       console.log(`  ${this.guess} - ${this.words.length} - ${roundTo(100 / this.words.length, 0.1)}%`);
     }
+    if (input == null) process.exit();
+    if (input == "") {
+      this.i++;
+      return this.guess;
+    }
     for (let i = 0; i < input.length; i++) {
       const char = input[i];
       if (char == "+") {
@@ -147,6 +178,7 @@ export class WordleBot {
         this.key += `[^${this.withLetters[i]}]`;
       } else if (char == "-") {
         this.key += this.guess[i];
+        this.greenLettersArray.push(this.guess[i]);
       } else if (char == "*") {
         let _guess = this.guess.substring(0, i) + this.guess.substring(i + 1);
         let allGrey = true;
@@ -161,22 +193,40 @@ export class WordleBot {
         this.key += `[^${this.withLetters[i]}]`;
       }
     }
-    this.words = this.words.filter(
+
+    let words = this.words.filter(
       (v) =>
         new RegExp(`^${this.key}$`, "i").test(v) &&
         new RegExp(`^[^${this.withoutLetters}]+$`, "i").test(v) &&
         wordContainsOneLetter(v, this.singleLetters.split("")) &&
         wordContainsAllLetters(v, Array.from(this.withLettersSet))
     );
-    this.i = 0;
-    this.guess = this.words[/* ~~(Math.random() * words.length) */ this.i];
-    while (this.guessed.includes(this.guess)) {
-      this.i++;
-      this.guess = this.words[this.i];
-    }
 
+    let usedAltStrategy = false;
+
+    // 98.2% after 1000
+
+    // if (this.usedAltStrategyNum < 2 && words.length > 50) {
+    //   words = this.words.filter(
+    //     (v) =>
+    //       new RegExp(`^[^${this.withoutLetters}]+$`, "i").test(v) &&
+    //       new RegExp(`^[^${Array.from(this.withLettersSet).join("")}]+$`, "i").test(v) &&
+    //       new RegExp(`^[^${this.greenLettersArray.join("")}]+$`, "i").test(v)
+    //     // && !wordContainsAllLetters(v, Array.from(this.withLettersSet))
+    //   );
+    //   usedAltStrategy = true;
+    //   this.usedAltStrategyNum++;
+    // }
+    let i = 0;
+    this.guess = words[/* ~~(Math.random() * words.length) */ i];
+    while (i < words.length && this.guessed.includes(this.guess)) {
+      i++;
+      this.guess = words[i];
+    }
+    this.lastWordList = words;
     this.guessed.push(this.guess);
+    if (!usedAltStrategy) this.words = words;
     this.i++;
-    return this.guess;
+    return this.guess?.toUpperCase();
   }
 }

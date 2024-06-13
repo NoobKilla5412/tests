@@ -1,13 +1,6 @@
 {
-  "distributution": [
-    8,
-    309,
-    2333,
-    6116,
-    7386,
-    5677
-  ],
-  "wins": 21829,
-  "losses": 8171,
-  "games": 30000
+  "distributution": [0, 0, 0, 0, 0, 0],
+  "wins": 0,
+  "losses": 0,
+  "games": 0
 }
